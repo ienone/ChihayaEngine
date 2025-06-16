@@ -1,0 +1,851 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI 音乐翻唱工坊</title>
+    <style>
+        :root {
+            --morandi-bg: #f4f0e8; /* 莫兰迪背景色 - 柔和米白 */
+            --morandi-primary: #a8b8a0; /* 莫兰迪主色 - 灰绿 */
+            --morandi-secondary: #c9c0b5; /* 莫兰迪次色 - 灰粉或灰褐 */
+            --morandi-accent: #7e8a77; /* 莫兰迪强调色 - 深一点的灰绿 */
+            --morandi-text: #5a524c; /* 莫兰迪文本色 - 深灰褐 */
+            --morandi-light-text: #8c837c; /* 莫兰迪浅色文本 */
+            --morandi-border: #dcd5ca; /* 莫兰迪边框色 */
+            --shadow-light: rgba(0, 0, 0, 0.1);
+            --shadow-dark: rgba(0, 0, 0, 0.2);
+            --border-radius-main: 12px; /* 圆角 */
+            --border-radius-small: 8px;
+        }
+
+        body {
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            background-color: var(--morandi-bg);
+            color: var(--morandi-text);
+            margin: 0;
+            padding: 0;
+            display: flex;
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+
+        .container {
+            display: flex;
+            width: 100%;
+        }
+
+        /* 侧边导航栏 */
+        .sidebar {
+            width: 280px;
+            background-color: var(--morandi-secondary);
+            padding: 30px 20px;
+            box-shadow: 2px 0 10px var(--shadow-light);
+            display: flex;
+            flex-direction: column;
+            border-right: 1px solid var(--morandi-border);
+        }
+
+        .sidebar h2 {
+            color: var(--morandi-text);
+            font-size: 1.8em;
+            margin-bottom: 30px;
+            text-align: center;
+            font-weight: 300;
+        }
+
+        .nav-steps {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .nav-steps li {
+            padding: 12px 15px;
+            margin-bottom: 10px;
+            border-radius: var(--border-radius-small);
+            cursor: default; /* 不可点击 */
+            transition: background-color 0.3s ease, color 0.3s ease;
+            color: var(--morandi-light-text);
+            font-size: 0.95em;
+        }
+
+        .nav-steps li.active {
+            background-color: var(--morandi-primary);
+            color: white;
+            font-weight: 500;
+        }
+        .nav-steps li.completed {
+            color: var(--morandi-accent);
+            text-decoration: line-through;
+        }
+
+
+        /* 主内容区 */
+        .main-content {
+            flex-grow: 1;
+            padding: 30px 40px;
+            overflow-y: auto;
+        }
+
+        .main-content h1 {
+            color: var(--morandi-accent);
+            font-size: 2.2em;
+            margin-bottom: 30px;
+            font-weight: 400;
+            border-bottom: 1px solid var(--morandi-border);
+            padding-bottom: 15px;
+        }
+
+        .stage-form {
+            background-color: #ffffff;
+            padding: 25px 30px;
+            margin-bottom: 30px;
+            border-radius: var(--border-radius-main);
+            box-shadow: 0 4px 15px var(--shadow-light);
+            border: 1px solid var(--morandi-border);
+        }
+
+        .stage-form h3 {
+            color: var(--morandi-primary);
+            font-size: 1.5em;
+            margin-top: 0;
+            margin-bottom: 20px;
+            font-weight: 500;
+            border-bottom: 1px solid var(--morandi-border);
+            padding-bottom: 10px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: var(--morandi-text);
+            font-weight: 500;
+            font-size: 0.9em;
+        }
+
+        .form-group input[type="text"],
+        .form-group input[type="number"],
+        .form-group input[type="file"],
+        .form-group select {
+            width: calc(100% - 24px); /* 减去padding */
+            padding: 12px;
+            border: 1px solid var(--morandi-border);
+            border-radius: var(--border-radius-small);
+            background-color: var(--morandi-bg);
+            color: var(--morandi-text);
+            font-size: 1em;
+            transition: border-color 0.3s ease, box-shadow 0.3s ease;
+        }
+        .form-group input[type="file"] {
+             padding: 8px;
+        }
+
+        .form-group input[type="text"]:focus,
+        .form_group input[type="number"]:focus,
+        .form_group select:focus {
+            outline: none;
+            border-color: var(--morandi-primary);
+            box-shadow: 0 0 0 2px rgba(168, 184, 160, 0.3);
+        }
+        .form-group input[type="checkbox"] {
+            margin-right: 8px;
+            transform: scale(1.1);
+        }
+
+
+        button.primary-button {
+            background-color: var(--morandi-primary);
+            color: white;
+            padding: 12px 25px;
+            border: none;
+            border-radius: var(--border-radius-small);
+            font-size: 1.05em;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.15s ease, box-shadow 0.15s ease;
+            box-shadow: 0 2px 5px var(--shadow-light);
+        }
+
+        button.primary-button:hover {
+            background-color: var(--morandi-accent);
+        }
+        button.primary-button:active {
+            transform: scale(0.97) translateY(1px);
+            box-shadow: 0 1px 2px var(--shadow-dark);
+        }
+        button.primary-button:disabled {
+            background-color: var(--morandi-secondary);
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+
+
+        .task-info-area, .logs-area {
+            margin-top: 30px;
+            background-color: #ffffff;
+            padding: 20px;
+            border-radius: var(--border-radius-main);
+            box-shadow: 0 4px 15px var(--shadow-light);
+            border: 1px solid var(--morandi-border);
+        }
+        .task-info-area h3, .logs-area h3 {
+            color: var(--morandi-primary);
+             margin-top: 0;
+        }
+
+        #logsArea {
+            width: calc(100% - 20px); /* 减去padding */
+            height: 350px;
+            overflow-y: scroll;
+            border: 1px solid var(--morandi-border);
+            padding: 10px;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            background-color: var(--morandi-bg);
+            border-radius: var(--border-radius-small);
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9em;
+            color: var(--morandi-text);
+        }
+
+        #downloadLinkArea a {
+            color: var(--morandi-primary);
+            text-decoration: none;
+            font-weight: bold;
+        }
+        #downloadLinkArea a:hover {
+            text-decoration: underline;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .status-message {
+            padding: 10px;
+            border-radius: var(--border-radius-small);
+            margin-bottom: 15px;
+            font-weight: 500;
+        }
+        .status-message.info { background-color: #e0e7f3; color: #3a5a8a; }
+        .status-message.success { background-color: #dff0d8; color: #3c763d; }
+        .status-message.error { background-color: #f2dede; color: #a94442; }
+        .status-message.waiting { background-color: #fcf8e3; color: #8a6d3b; }
+
+    </style>
+</head>
+<body>
+    <div class="container">
+        <aside class="sidebar">
+            <h2>AI翻唱工坊</h2>
+            <ul class="nav-steps" id="navSteps">
+                <li id="nav-initial_upload" data-stage-key="initial_upload">0. 初始化与上传</li>
+                <li id="nav-demucs_separation" data-stage-key="demucs_separation">1. 人声分离 (Demucs)</li>
+                <li id="nav-gpt_sovits_preprocess" data-stage-key="gpt_sovits_preprocess">2a. GPT预处理</li>
+                <li id="nav-gpt_sovits_format" data-stage-key="gpt_sovits_format">2b. GPT格式化</li>
+                <li id="nav-gpt_sovits_train_sovits" data-stage-key="gpt_sovits_train_sovits">2c. SoVITS训练</li>
+                <li id="nav-gpt_sovits_train_gpt" data-stage-key="gpt_sovits_train_gpt">2d. GPT训练</li>
+                <li id="nav-gpt_sovits_inference" data-stage-key="gpt_sovits_inference">2e. GPT推理</li>
+                <li id="nav-ffmpeg_slice_process" data-stage-key="ffmpeg_slice_process">3. 音频切片处理</li>
+                <li id="nav-so_vits_svc_prepare_data" data-stage-key="so_vits_svc_prepare_data">4a. SVC数据准备</li>
+                <li id="nav-so_vits_svc_train" data-stage-key="so_vits_svc_train">4b. SVC主模型训练</li>
+                <li id="nav-so_vits_svc_train_diffusion" data-stage-key="so_vits_svc_train_diffusion">4c. SVC扩散模型训练</li>
+                <li id="nav-so_vits_svc_inference" data-stage-key="so_vits_svc_inference">4d. SVC推理</li>
+                <li id="nav-final_mix" data-stage-key="final_mix">5. 最终混音</li>
+            </ul>
+        </aside>
+
+        <main class="main-content">
+            <h1>工作流程</h1>
+
+            <!-- 阶段 0: 初始文件上传 -->
+            <div id="initial_uploadParamsForm" class="stage-form">
+                <h3>步骤 0: 初始文件上传与实验设置</h3>
+                <div class="form-group">
+                    <label for="experiment_name">实验名称:</label>
+                    <input type="text" id="experiment_name" name="experiment_name" value="我的AI翻唱" required>
+                </div>
+                <div class="form-group">
+                    <label for="original_song_file">原始歌曲 (用于Demucs分离和最终伴奏):</label>
+                    <input type="file" id="original_song_file" name="original_song_file" accept=".wav,.mp3,.flac,.ogg" required>
+                </div>
+                <div class="form-group">
+                    <label for="gpt_training_voice_file">GPT-SoVITS 训练用纯人声 (.wav):</label>
+                    <input type="file" id="gpt_training_voice_file" name="gpt_training_voice_file" accept=".wav" required>
+                </div>
+                 <div class="form-group">
+                    <label for="gpt_reference_audio_file">GPT-SoVITS 参考音频 (.wav):</label>
+                    <input type="file" id="gpt_reference_audio_file" name="gpt_reference_audio_file" accept=".wav" required>
+                </div>
+                <div class="form-group">
+                    <label for="gpt_lyrics_file">GPT-SoVITS 生成歌词 (.txt):</label>
+                    <input type="file" id="gpt_lyrics_file" name="gpt_lyrics_file" accept=".txt" required>
+                </div>
+                <button type="button" class="primary-button" id="btnInitialUpload" onclick="submitInitialFiles()">上传文件并创建任务</button>
+            </div>
+
+            <!-- 阶段 1: Demucs -->
+            <div id="demucs_separationParamsForm" class="stage-form hidden">
+                <h3>步骤 1: Demucs 人声分离参数</h3>
+                <div class="form-group">
+                    <label for="demucs_model_name">Demucs 模型名称:</label>
+                    <input type="text" id="demucs_model_name" name="demucs_model_name" value="htdemucs">
+                </div>
+                <div class="form-group">
+                    <input type="checkbox" id="demucs_two_stems_vocals_checkbox" name="demucs_two_stems_vocals_checkbox" checked>
+                    <label for="demucs_two_stems_vocals_checkbox">仅分离为人声和伴奏 (K歌模式)</label>
+                </div>
+                <button type="button" class="primary-button" onclick="submitStageParams('demucs_separation')">开始 Demucs 分离</button>
+            </div>
+
+            <!-- 阶段 2a: GPT 预处理 -->
+            <div id="gpt_sovits_preprocessParamsForm" class="stage-form hidden">
+                <h3>步骤 2a: GPT-SoVITS 数据预处理参数</h3>
+                <div class="form-group">
+                    <label for="gpt_sovits_version">GPT-SoVITS 版本 (例如: v4):</label>
+                    <input type="text" id="gpt_sovits_version" name="gpt_sovits_version" value="v4">
+                </div>
+                <div class="form-group">
+                    <label for="gpt_slice_num_processes">切片进程数:</label>
+                    <input type="number" id="gpt_slice_num_processes" name="gpt_slice_num_processes" value="4" min="1">
+                </div>
+                <div class="form-group">
+                    <input type="checkbox" id="gpt_run_denoise_checkbox" name="gpt_run_denoise_checkbox">
+                    <label for="gpt_run_denoise_checkbox">运行降噪 (re_preprocess_data.py)</label>
+                </div>
+                <!-- 需要添加 train.txt 中 re_preprocess_data.py 的其他可选参数 -->
+                 <div class="form-group">
+                    <label for="gpt_bert_model_dir">BERT 模型目录 (可选, 留空使用默认):</label>
+                    <input type="text" id="gpt_bert_model_dir" name="gpt_bert_model_dir" placeholder="/path/to/bert_model">
+                </div>
+                <div class="form-group">
+                    <label for="gpt_ssl_model_dir">SSL 模型目录 (可选, 留空使用默认):</label>
+                    <input type="text" id="gpt_ssl_model_dir" name="gpt_ssl_model_dir" placeholder="/path/to/ssl_model">
+                </div>
+                <button type="button" class="primary-button" onclick="submitStageParams('gpt_sovits_preprocess')">开始 GPT 预处理</button>
+            </div>
+            
+            <!-- 
+                *******************************************************************************
+                *                                                                             *
+                *  ！！！请在此处为你后端 PIPELINE_STAGES 中定义的其他阶段补全参数表单 ！！！   *
+                *  每个表单的 id 应为 "<stage_key>ParamsForm"                                  *
+                *  例如: gpt_sovits_formatParamsForm, gpt_sovits_train_sovitsParamsForm 等     *
+                *  每个表单内包含该阶段所需的所有参数输入框 (input, select, checkbox)        *
+                *  并有一个提交按钮，onclick 调用 submitStageParams('<stage_key>')             *
+                *                                                                             *
+                *******************************************************************************
+            -->
+
+            <div id="gpt_sovits_formatParamsForm" class="stage-form hidden">
+                <h3>步骤 2b: GPT-SoVITS 训练集格式化</h3>
+                <div class="form-group">
+                    <label for="gpt_reference_text">参考音频文本 (GPT-SoVITS格式化所需):</label>
+                    <input type="text" id="gpt_reference_text" name="gpt_reference_text" value="大家好，欢迎收听我的歌声。" style="width: 80%;">
+                </div>
+                <div class="form-group">
+                     <input type="checkbox" id="gpt_use_half_precision_format_checkbox" name="gpt_use_half_precision_checkbox" checked>
+                     <label for="gpt_use_half_precision_format_checkbox">格式化时使用半精度</label>
+                </div>
+                <!-- 其他 re_format_training_data.py 参数 -->
+                <button type="button" class="primary-button" onclick="submitStageParams('gpt_sovits_format')">开始格式化</button>
+            </div>
+            
+            <div id="gpt_sovits_train_sovitsParamsForm" class="stage-form hidden">
+                <h3>步骤 2c: GPT-SoVITS - SoVITS模型微调</h3>
+                <div class="form-group">
+                    <label for="gpt_sovits_batch_size">SoVITS Batch Size:</label>
+                    <input type="number" id="gpt_sovits_batch_size" name="gpt_sovits_batch_size" value="4">
+                </div>
+                <div class="form-group">
+                    <label for="gpt_sovits_epochs">SoVITS Epochs:</label>
+                    <input type="number" id="gpt_sovits_epochs" name="gpt_sovits_epochs" value="10">
+                </div>
+                <div class="form-group">
+                    <label for="gpt_sovits_save_every">SoVITS Save Every Epoch:</label>
+                    <input type="number" id="gpt_sovits_save_every" name="gpt_sovits_save_every" value="2">
+                </div>
+                 <div class="form-group">
+                    <label for="gpt_sovits_lora_rank">SoVITS LoRA Rank (v3/v4):</label>
+                    <input type="text" id="gpt_sovits_lora_rank" name="gpt_sovits_lora_rank" value="128">
+                </div>
+                <!-- 其他 SoVITS 训练参数 -->
+                <button type="button" class="primary-button" onclick="submitStageParams('gpt_sovits_train_sovits')">开始SoVITS训练</button>
+            </div>
+
+            <div id="gpt_sovits_train_gptParamsForm" class="stage-form hidden">
+                <h3>步骤 2d: GPT-SoVITS - GPT模型微调</h3>
+                <div class="form-group">
+                    <label for="gpt_gpt_batch_size">GPT Batch Size:</label>
+                    <input type="number" id="gpt_gpt_batch_size" name="gpt_gpt_batch_size" value="4">
+                </div>
+                <div class="form-group">
+                    <label for="gpt_gpt_epochs">GPT Epochs:</label>
+                    <input type="number" id="gpt_gpt_epochs" name="gpt_gpt_epochs" value="15">
+                </div>
+                 <div class="form-group">
+                    <label for="gpt_gpt_save_every">GPT Save Every Epoch:</label>
+                    <input type="number" id="gpt_gpt_save_every" name="gpt_gpt_save_every" value="3">
+                </div>
+                <div class="form-group">
+                     <input type="checkbox" id="gpt_if_dpo_checkbox" name="gpt_if_dpo_checkbox">
+                     <label for="gpt_if_dpo_checkbox">使用DPO训练</label>
+                </div>
+                <!-- 其他 GPT 训练参数 -->
+                <button type="button" class="primary-button" onclick="submitStageParams('gpt_sovits_train_gpt')">开始GPT训练</button>
+            </div>
+
+            <div id="gpt_sovits_inferenceParamsForm" class="stage-form hidden">
+                <h3>步骤 2e: GPT-SoVITS - 推理</h3>
+                 <div class="form-group">
+                    <label for="gpt_infer_top_k">Top K:</label>
+                    <input type="number" id="gpt_infer_top_k" name="gpt_infer_top_k" value="20">
+                </div>
+                <div class="form-group">
+                    <label for="gpt_infer_temp">Temperature:</label>
+                    <input type="number" id="gpt_infer_temp" name="gpt_infer_temp" value="0.7" step="0.01">
+                </div>
+                <div class="form-group">
+                    <label for="gpt_infer_speed">Speed:</label>
+                    <input type="number" id="gpt_infer_speed" name="gpt_infer_speed" value="1.0" step="0.1">
+                </div>
+                 <div class="form-group">
+                    <label for="gpt_infer_sample_steps">Sample Steps:</label>
+                    <input type="number" id="gpt_infer_sample_steps" name="gpt_infer_sample_steps" value="32">
+                </div>
+                <!-- 其他 GPT 推理参数 -->
+                <button type="button" class="primary-button" onclick="submitStageParams('gpt_sovits_inference')">开始GPT推理</button>
+            </div>
+            
+            <div id="ffmpeg_slice_processParamsForm" class="stage-form hidden">
+                <h3>步骤 3: FFmpeg 音频切片与处理</h3>
+                <p style="color: var(--morandi-light-text);">此阶段通常使用默认参数自动进行。</p>
+                <button type="button" class="primary-button" onclick="submitStageParams('ffmpeg_slice_process')">开始切片处理</button>
+            </div>
+
+            <div id="so_vits_svc_prepare_dataParamsForm" class="stage-form hidden">
+                <h3>步骤 4a: so-vits-svc 数据准备</h3>
+                <div class="form-group">
+                    <label for="svc_speaker_name">SVC 说话人名称:</label>
+                    <input type="text" id="svc_speaker_name" name="svc_speaker_name" value="speaker_01">
+                </div>
+                <div class="form-group">
+                    <label for="svc_speech_encoder">SVC 语音编码器:</label>
+                    <select id="svc_speech_encoder" name="svc_speech_encoder">
+                        <option value="vec768l12" selected>vec768l12 (推荐)</option>
+                        <option value="vec256l9">vec256l9</option>
+                        <option value="hubertsoft">hubertsoft</option>
+                        <option value="whisper-ppg">whisper-ppg</option>
+                        <!-- 添加 README_sovitssvc.md 中列出的其他编码器 -->
+                    </select>
+                </div>
+                 <div class="form-group">
+                    <label for="svc_f0_predictor">SVC F0预测器:</label>
+                    <select id="svc_f0_predictor" name="svc_f0_predictor">
+                        <option value="rmvpe" selected>rmvpe (推荐)</option>
+                        <option value="crepe">crepe</option>
+                        <option value="dio">dio</option>
+                        <option value="pm">pm</option>
+                        <option value="harvest">harvest</option>
+                        <option value="fcpe">fcpe</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                     <input type="checkbox" id="svc_vol_aug_checkbox" name="svc_vol_aug_checkbox">
+                     <label for="svc_vol_aug_checkbox">使用响度嵌入 (vol_aug)</label>
+                </div>
+                <button type="button" class="primary-button" onclick="submitStageParams('so_vits_svc_prepare_data')">开始SVC数据准备</button>
+            </div>
+            
+            <div id="so_vits_svc_trainParamsForm" class="stage-form hidden">
+                <h3>步骤 4b: so-vits-svc 主模型训练</h3>
+                 <div class="form-group">
+                    <label for="svc_train_epochs">SVC 训练轮数:</label>
+                    <input type="number" id="svc_train_epochs" name="svc_train_epochs" placeholder="默认值来自config.json">
+                </div>
+                <div class="form-group">
+                    <label for="svc_batch_size">SVC 批大小:</label>
+                    <input type="number" id="svc_batch_size" name="svc_batch_size" placeholder="默认值来自config.json">
+                </div>
+                <div class="form-group">
+                    <label for="svc_keep_ckpts">SVC 保留检查点数 (0为全部):</label>
+                    <input type="number" id="svc_keep_ckpts" name="svc_keep_ckpts" placeholder="默认3">
+                </div>
+                <div class="form-group">
+                     <input type="checkbox" id="svc_use_diff_train_checkbox" name="svc_use_diff_train_checkbox">
+                     <label for="svc_use_diff_train_checkbox">同时训练扩散模型 (用于后续可选的浅扩散)</label>
+                </div>
+                <button type="button" class="primary-button" onclick="submitStageParams('so_vits_svc_train')">开始SVC主模型训练</button>
+            </div>
+            
+            <div id="so_vits_svc_train_diffusionParamsForm" class="stage-form hidden">
+                <h3>步骤 4c: so-vits-svc 扩散模型训练 (可选)</h3>
+                <p style="color: var(--morandi-light-text);">如果上一步勾选了“同时训练扩散模型”，此阶段会自动进行。否则将跳过。</p>
+                 <div class="form-group">
+                    <label for="svc_diff_train_duration">扩散模型训练切片时长 (秒):</label>
+                    <input type="number" id="svc_diff_train_duration" name="svc_diff_train_duration" placeholder="默认值来自diffusion.yaml">
+                </div>
+                 <div class="form-group">
+                    <label for="svc_diff_batch_size">扩散模型训练批大小:</label>
+                    <input type="number" id="svc_diff_batch_size" name="svc_diff_batch_size" placeholder="默认值来自diffusion.yaml">
+                </div>
+                <button type="button" class="primary-button" onclick="submitStageParams('so_vits_svc_train_diffusion')">开始/确认扩散模型训练</button>
+            </div>
+            
+            <div id="so_vits_svc_inferenceParamsForm" class="stage-form hidden">
+                <h3>步骤 4d: so-vits-svc 推理</h3>
+                <div class="form-group">
+                    <label for="svc_pitch_adjust">SVC 音高调整 (半音):</label>
+                    <input type="number" id="svc_pitch_adjust" name="svc_pitch_adjust" value="0">
+                </div>
+                 <div class="form-group">
+                    <label for="svc_f0_predictor_infer">SVC 推理用F0预测器:</label>
+                    <select id="svc_f0_predictor_infer" name="svc_f0_predictor_infer">
+                        <option value="rmvpe" selected>rmvpe (推荐)</option>
+                        <!-- 同上 -->
+                    </select>
+                </div>
+                <div class="form-group">
+                     <input type="checkbox" id="svc_use_diff_infer_checkbox" name="svc_use_diff_infer_checkbox">
+                     <label for="svc_use_diff_infer_checkbox">使用浅扩散 (如果已训练扩散模型)</label>
+                </div>
+                <div class="form-group">
+                    <label for="svc_k_step_infer">浅扩散 K_Step (如果使用):</label>
+                    <input type="number" id="svc_k_step_infer" name="svc_k_step_infer" value="100">
+                </div>
+                <!-- 其他 SVC 推理参数 -->
+                <button type="button" class="primary-button" onclick="submitStageParams('so_vits_svc_inference')">开始SVC推理</button>
+            </div>
+            
+            <div id="final_mixParamsForm" class="stage-form hidden">
+                <h3>步骤 5: 最终歌曲合成</h3>
+                <div class="form-group">
+                    <label for="final_mix_vocals_vol">人声音量 (0.0 - 2.0):</label>
+                    <input type="number" id="final_mix_vocals_vol" name="final_mix_vocals_vol" value="1.0" step="0.05" min="0" max="2">
+                </div>
+                <div class="form-group">
+                    <label for="final_mix_bg_vol">背景音量 (0.0 - 2.0):</label>
+                    <input type="number" id="final_mix_bg_vol" name="final_mix_bg_vol" value="0.8" step="0.05" min="0" max="2">
+                </div>
+                <button type="button" class="primary-button" onclick="submitStageParams('final_mix')">合成最终歌曲</button>
+            </div>
+
+
+            <!-- 任务信息和日志区域 -->
+            <div class="task-info-area">
+                <h3>任务状态</h3>
+                <div class="form-group">
+                    <label>任务 ID:</label> <span id="taskIdDisplay">-</span>
+                </div>
+                <div class="form-group">
+                    <label>当前状态:</label> <span id="taskStatusDisplay" class="status-message">-</span>
+                </div>
+                <div class="form-group">
+                    <label>当前阶段:</label> <span id="taskStageDisplay">-</span>
+                </div>
+                 <div class="form-group">
+                    <label>下一步操作提示:</label> <span id="nextActionHint" class="status-message info">-</span>
+                </div>
+                <div id="downloadLinkArea" class="form-group"></div>
+            </div>
+
+            <div class="logs-area">
+                <h3>实时日志</h3>
+                <pre id="logsArea"></pre>
+            </div>
+
+        </main>
+    </div>
+
+    <script>
+        let currentTaskId = null;
+        let eventSource = null;
+        const logsArea = document.getElementById('logsArea');
+        const taskIdDisplay = document.getElementById('taskIdDisplay');
+        const taskStatusDisplay = document.getElementById('taskStatusDisplay');
+        const taskStageDisplay = document.getElementById('taskStageDisplay');
+        const nextActionHint = document.getElementById('nextActionHint');
+        const downloadLinkArea = document.getElementById('downloadLinkArea');
+        const allStageForms = document.querySelectorAll('.stage-form');
+        const navStepsElements = document.querySelectorAll('.nav-steps li');
+
+        const PIPELINE_STAGE_FRIENDLY_NAMES = {
+            "initial_upload": "0. 初始化与上传",
+            "demucs_separation": "1. 人声分离 (Demucs)",
+            "gpt_sovits_preprocess": "2a. GPT数据预处理",
+            "gpt_sovits_format": "2b. GPT训练集格式化",
+            "gpt_sovits_train_sovits": "2c. GPT-SoVITS SoVITS模型微调",
+            "gpt_sovits_train_gpt": "2d. GPT-SoVITS GPT模型微调",
+            "gpt_sovits_inference": "2e. GPT-SoVITS 推理",
+            "ffmpeg_slice_process": "3. FFmpeg 音频切片与处理",
+            "so_vits_svc_prepare_data": "4a. so-vits-svc 数据准备",
+            "so_vits_svc_train": "4b. so-vits-svc 主模型训练",
+            "so_vits_svc_train_diffusion": "4c. so-vits-svc 扩散模型训练",
+            "so_vits_svc_inference": "4d. so-vits-svc 推理",
+            "final_mix": "5. 最终歌曲合成"
+        };
+        
+        // 初始化时，隐藏所有参数表单，只显示第一个
+        function initializeForms() {
+            allStageForms.forEach(form => form.classList.add('hidden'));
+            const initialForm = document.getElementById('initial_uploadParamsForm');
+            if (initialForm) {
+                initialForm.classList.remove('hidden');
+            }
+            nextActionHint.textContent = "请上传初始文件并设置实验名称。";
+            nextActionHint.className = 'status-message info';
+            updateNav('initial_upload');
+        }
+
+        function updateNav(activeStageKey, taskStatus = "") {
+            let stageReached = false;
+            navStepsElements.forEach(navItem => {
+                const itemStageKey = navItem.dataset.stageKey;
+                navItem.classList.remove('active', 'completed');
+
+                if (itemStageKey === activeStageKey) {
+                    navItem.classList.add('active');
+                    stageReached = true;
+                } else if (!stageReached) {
+                    navItem.classList.add('completed');
+                }
+            });
+        }
+
+
+        function showStageForm(stageKey) {
+            allStageForms.forEach(form => form.classList.add('hidden'));
+            const formToShow = document.getElementById(stageKey + 'ParamsForm');
+            const friendlyName = PIPELINE_STAGE_FRIENDLY_NAMES[stageKey] || stageKey.replace("_", " ").title();
+
+            if (formToShow) {
+                formToShow.classList.remove('hidden');
+                nextActionHint.textContent = `等待提交 "${friendlyName}" 阶段的参数...`;
+                nextActionHint.className = 'status-message waiting';
+            } else if (stageKey === 'initial_upload') { // 特殊处理初始上传表单
+                 document.getElementById('initial_uploadParamsForm').classList.remove('hidden');
+                 nextActionHint.textContent = "请上传初始文件并设置实验名称。";
+                 nextActionHint.className = 'status-message info';
+            } else {
+                nextActionHint.textContent = `流程正在自动进行 "${friendlyName}" 或已结束...`;
+                nextActionHint.className = 'status-message info';
+            }
+            updateNav(stageKey);
+        }
+        
+        function updateTaskDisplay(task_id, status, stage_info, stage_key) {
+            if(task_id) taskIdDisplay.textContent = task_id;
+            if(status) {
+                taskStatusDisplay.textContent = status;
+                if (status === "失败") taskStatusDisplay.className = 'status-message error';
+                else if (status === "已完成") taskStatusDisplay.className = 'status-message success';
+                else if (status === "进行中" || status === "排队中") taskStatusDisplay.className = 'status-message info';
+                else taskStatusDisplay.className = 'status-message waiting'; // 例如 "文件就绪", "待处理"
+            }
+            if(stage_info) taskStageDisplay.textContent = stage_info;
+            if(stage_key) updateNav(stage_key, status);
+        }
+
+
+        function submitInitialFiles() {
+            logsArea.textContent = ""; 
+            downloadLinkArea.innerHTML = "";
+            taskStatusDisplay.textContent = "处理中...";
+            taskStatusDisplay.className = 'status-message info';
+
+            const BACKEND_BASE_URL = 'http://localhost:6006'; 
+            const form = document.getElementById('initial_uploadParamsForm');
+            const formData = new FormData();
+            // 收集初始文件和实验名
+            formData.append('experiment_name', form.querySelector('[name="experiment_name"]').value);
+            const originalSongFile = form.querySelector('[name="original_song_file"]').files[0];
+            const gptTrainingFile = form.querySelector('[name="gpt_training_voice_file"]').files[0];
+            const gptRefFile = form.querySelector('[name="gpt_reference_audio_file"]').files[0];
+            const gptLyricsFile = form.querySelector('[name="gpt_lyrics_file"]').files[0];
+
+            if (!originalSongFile || !gptTrainingFile || !gptRefFile || !gptLyricsFile) {
+                alert("请确保所有初始文件都已选择！");
+                taskStatusDisplay.textContent = "错误";
+                taskStatusDisplay.className = 'status-message error';
+                return;
+            }
+
+            formData.append('original_song_file', originalSongFile);
+            formData.append('gpt_training_voice_file', gptTrainingFile);
+            formData.append('gpt_reference_audio_file', gptRefFile);
+            formData.append('gpt_lyrics_file', gptLyricsFile);
+            
+            document.getElementById('btnInitialUpload').disabled = true;
+
+            // fetch('/initiate_task', { method: 'POST', body: formData })
+            fetch(BACKEND_BASE_URL + '/initiate_task', { method: 'POST', body: formData })
+                .then(res => {
+                    if (!res.ok) { throw new Error(`HTTP error! status: ${res.status}`); }
+                    return res.json();
+                })
+                .then(data => {
+                    document.getElementById('btnInitialUpload').disabled = false;
+                    if (data.error) {
+                        alert("创建任务错误: " + data.error);
+                        logsArea.textContent = "错误: " + data.error + "\n";
+                        updateTaskDisplay(data.task_id, "失败", data.error);
+                        return;
+                    }
+                    currentTaskId = data.task_id;
+                    updateTaskDisplay(data.task_id, data.status, data.stage_info, data.current_stage_key || 'initial_upload');
+                    logsArea.textContent = "任务已创建。等待日志...\n";
+                    
+                    if (eventSource) eventSource.close();
+                    //eventSource = new EventSource('/stream_logs/' + currentTaskId);
+                    eventSource = new EventSource(BACKEND_BASE_URL + '/stream_logs/' + currentTaskId);
+                    eventSource.onmessage = handleSseMessage;
+                    eventSource.onerror = handleSseError;
+
+                    if (data.next_expected_stage_key) {
+                        showStageForm(data.next_expected_stage_key);
+                    } else { // 如果后端没有明确给出下一个，就隐藏当前，等SSE
+                        form.classList.add('hidden');
+                        nextActionHint.textContent = "任务初始化完成，等待下一步...";
+                    }
+                })
+                .catch(err => {
+                    document.getElementById('btnInitialUpload').disabled = false;
+                    alert("请求错误: " + err.message);
+                    logsArea.textContent = "请求错误: " + err.message + "\n";
+                    updateTaskDisplay(null, "失败", "网络或服务器错误");
+                });
+        }
+
+        function submitStageParams(stageKey) {
+            if (!currentTaskId) {
+                alert("请先通过上传初始文件来创建任务！");
+                return;
+            }
+            const form = document.getElementById(stageKey + 'ParamsForm');
+            if (!form) {
+                alert("错误：找不到参数表单: " + stageKey);
+                return;
+            }
+            const formData = new FormData();
+            // 收集该表单内的所有参数
+            // querySelectorAll for inputs, selects, textareas within the specific form
+            form.querySelectorAll('input, select, textarea').forEach(input => {
+                if (input.name) {
+                    if (input.type === 'checkbox') {
+                        // 后端用 request.form[key] 接收，'on' 或不存在。
+                        // 为简化，可以让后端处理 "on" 为 true
+                        if (input.checked) formData.append(input.name, 'on');
+                    } else if (input.type === 'file') {
+                        if (input.files.length > 0) {
+                             formData.append(input.name, input.files[0]);
+                        }
+                    }
+                    else {
+                        formData.append(input.name, input.value);
+                    }
+                }
+            });
+            const BACKEND_BASE_URL = 'http://localhost:6006'; 
+            const submitButton = form.querySelector('button.primary-button');
+            if(submitButton) submitButton.disabled = true;
+
+            taskStatusDisplay.textContent = "处理中...";
+            taskStatusDisplay.className = 'status-message info';
+
+            //fetch(`/submit_stage_params/${currentTaskId}/${stageKey}`, { method: 'POST', body: formData })
+            fetch(BACKEND_BASE_URL + `/submit_stage_params/${currentTaskId}/${stageKey}`, { method: 'POST', body: formData })
+                .then(res => {
+                    if (!res.ok) { throw new Error(`HTTP error! status: ${res.status}`); }
+                    return res.json();
+                })
+                .then(data => {
+                    if(submitButton) submitButton.disabled = false;
+                    if (data.error) {
+                        alert(`提交 ${stageKey} 参数错误: ` + data.error);
+                        logsArea.textContent += `提交 ${stageKey} 参数错误: ` + data.error + '\n';
+                        updateTaskDisplay(currentTaskId, "失败", data.error, stageKey);
+                        return;
+                    }
+                    updateTaskDisplay(currentTaskId, data.status, data.stage_info, data.current_stage_key || stageKey);
+                    logsArea.textContent += `阶段 ${stageKey} 参数已提交，任务进行中...\n`;
+                    form.classList.add('hidden'); // 成功提交后隐藏当前表单
+                    nextActionHint.textContent = "任务进行中，请查看日志...";
+                    nextActionHint.className = 'status-message info';
+                })
+                .catch(err => {
+                    if(submitButton) submitButton.disabled = false;
+                    alert(`请求 ${stageKey} 错误: ` + err.message);
+                    logsArea.textContent += `请求 ${stageKey} 错误: ` + err.message + '\n';
+                     updateTaskDisplay(currentTaskId, "失败", "网络或服务器错误", stageKey);
+                });
+        }
+
+        function handleSseMessage(event) {
+            try {
+                const eventData = JSON.parse(event.data);
+                if (eventData.type === 'stage_update') {
+                    updateTaskDisplay(eventData.task_id, eventData.status, eventData.stage_info, eventData.stage_key);
+                    logsArea.textContent += `[系统消息] 进入阶段: ${eventData.stage_info} (状态: ${eventData.status})\n`;
+                    if (eventData.status === "待处理" && eventData.stage_key) {
+                        showStageForm(eventData.stage_key);
+                    } else { // 进行中、排队中等状态，通常隐藏所有表单
+                        allStageForms.forEach(form => form.classList.add('hidden'));
+                         if (eventData.status !== "已完成" && eventData.status !== "失败") {
+                            nextActionHint.textContent = `"${eventData.stage_info}" 正在进行中...`;
+                            nextActionHint.className = 'status-message info';
+                        }
+                    }
+                     // 如果后端在stage_update中也发了next_expected_action
+                    if (eventData.next_expected_action) {
+                        showStageForm(eventData.next_expected_action);
+                    }
+
+                } else if (eventData.event === 'EOS') {
+                    logsArea.textContent += `--- 日志流结束 (状态: ${eventData.status}) ---\n`;
+                    updateTaskDisplay(currentTaskId, eventData.status, eventData.stage_info || "已结束", eventData.stage_key);
+                    
+                    if (eventData.status === '已完成' && eventData.result_paths && eventData.result_paths.final_song) {
+                        // 使用 BACKEND_BASE_URL 构建完整的下载链接
+                        const downloadUrl = `${BACKEND_BASE_URL}/download_file?path=${encodeURIComponent(eventData.result_paths.final_song)}`;
+                        downloadLinkArea.innerHTML = `<b>下载:</b> <a href="${downloadUrl}" target="_blank">最终合成歌曲</a>`;
+                        nextActionHint.textContent = "所有阶段已成功完成！";
+                        nextActionHint.className = 'status-message success';
+                    } else if (eventData.status === '失败') {
+                        logsArea.textContent += "错误: " + (eventData.error || "未知故障") + "\n";
+                        nextActionHint.textContent = "任务失败: " + (eventData.error || "未知故障");
+                        nextActionHint.className = 'status-message error';
+                         // 任务失败时，可能需要允许用户重新提交当前失败阶段的参数
+                         if(eventData.stage_key) showStageForm(eventData.stage_key);
+                    } else {
+                        nextActionHint.textContent = "任务已结束。";
+                        nextActionHint.className = 'status-message info';
+                    }
+                    allStageForms.forEach(form => form.classList.add('hidden'));
+                    if (eventSource) eventSource.close();
+                } else { // 普通日志
+                    logsArea.textContent += eventData + '\n';
+                }
+            } catch (e) { // 如果JSON解析失败，直接显示原始数据
+                 logsArea.textContent += event.data + '\n';
+            }
+            logsArea.scrollTop = logsArea.scrollHeight;
+        }
+        function handleSseError(err) {
+            logsArea.textContent += "--- 日志流错误或连接已关闭 ---\n";
+            if (eventSource) eventSource.close();
+            // 可以在这里尝试重连，或者提示用户
+            nextActionHint.textContent = "与服务器的日志连接断开。";
+            nextActionHint.className = 'status-message error';
+        }
+        
+        // 页面加载时初始化
+        document.addEventListener('DOMContentLoaded', initializeForms);
+
+    </script>
+</body>
+</html>
