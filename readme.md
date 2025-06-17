@@ -56,9 +56,9 @@ python rename.py
 > 3. 修正模块导入路径（如将 `from module` → `from GPT_SoVITS.module`）
 
 ## 🎧 效果展示
-<video src="https://github.com/ienone/ChihayaEngine/blob/main/files/demo.mp4" controls width="800"></video>
+<video src="https://github.com/ienone/ChihayaEngine/raw/refs/heads/main/files/demo.mp4" controls width="800"></video>
 
-<audio src="https://github.com/ienone/ChihayaEngine/blob/main/files/%E7%A4%BA%E4%BE%8B-%E6%96%AD%E6%A1%A5%E6%AE%8B%E9%9B%AA.flac" controls></audio>
+<audio src="https://github.com/ienone/ChihayaEngine/raw/refs/heads/main/files/%E7%A4%BA%E4%BE%8B-%E6%96%AD%E6%A1%A5%E6%AE%8B%E9%9B%AA.flac" controls></audio>
 
 
 ---
